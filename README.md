@@ -33,8 +33,8 @@ Os arquivos indicados possuem mais informações quando necessário.
 
 > $$  P = \begin{bmatrix}
 > c/a & 0 & 0                                                    & 0 \\
-> 0   & c & -{{f^{\prime}+n^{\prime}}\over{f^{\prime}-n^{\prime}}} & 0 \\
-> 0   & 0 & 0                                                    & -{{2f^{\prime}n^{\prime}}\over{f^{\prime}-n^{\prime}}} \\
+> 0   & c & 0 & 0 \\
+> 0   & 0 & -{{f^{\prime}+n^{\prime}}\over{f^{\prime}-n^{\prime}}} & -{{2f^{\prime}n^{\prime}}\over{f^{\prime}-n^{\prime}}} \\
 > 0 & 0 & -1 & 0 \\
 > \end{bmatrix} $$
 > 
