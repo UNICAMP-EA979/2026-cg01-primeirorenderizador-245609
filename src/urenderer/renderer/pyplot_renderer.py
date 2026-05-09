@@ -74,9 +74,11 @@ class PyplotRenderer(Renderer):
         ## SEU CÓDIGO AQUI #####################################################
         # Projete o triângulo, combinando a matriz de transformação do modelo,
         #  view matriz (self._view_matrix) e a matriz de projeção (self._projection_matrix)
+        # Calcula a Matriz MVP (Model-View-Projection)
+        MVP = self._projection_matrix @ self._view_matrix @ model_transformation
+        triangle_proj = (MVP @ triangle.T).T
 
-        triangle_proj =
-
+    
         #########################################################################
 
         return triangle_proj
@@ -96,20 +98,19 @@ class PyplotRenderer(Renderer):
             tuple[bool, np.ndarray]: if the triangle was clipped, and the triangle normalized if it was not.
         '''
 
-        ## SEU CÓDIGO AQUI #####################################################
-        # Realize o clipping do triângulo
-
-        # Cheque se o triângulo está inteiramente visível
-        # Cada vértice é composto por quatro valores triangle[i] = [v_x, v_y, v_z, v_w]
-        # Todos os vértices do triângulo devem estar dentro do volume: -v_w <= v_x, v_y, v_z <= v_w
-
-        # Checa se o triângulo removido
-        clip =
+    ## SEU CÓDIGO AQUI #####################################################
+        
+        # Separa as coordenadas xyz (3x3) e a coluna w (3x1) para facilitar
+        xyz = triangle[:, 0:3]
+        w = triangle[:, 3:4] # Mantém o formato de coluna
+        
+        # Checa se algum x, y ou z é menor que -w ou maior que w
+        clip = np.any(xyz < -w) or np.any(xyz > w)
 
         if not clip:
-            # Normalize o triângulo, dividindo cada vértice pelo seu último valor v_w
-            triangle_ndc =
-
+            # Normalize o triângulo, dividindo cada coordenada pelo seu respectivo v_w
+            # Isso transforma as coordenadas para NDC (Normalized Device Coordinates)
+            triangle_ndc = triangle / w
             return clip, triangle_ndc
 
         return clip, triangle
@@ -127,10 +128,13 @@ class PyplotRenderer(Renderer):
         Returns:
             np.ndarray: mapped triangle
         '''
-        ## SEU CÓDIGO AQUI #####################################################
-        # Mapeie o triângulo que está no intervalo [-1, 1]
-        # A primeira coordenada deve ser mapeada para [0, self.screen_width]
-        # A segunda coordenada deve ser mapeada para [0, self.screen_height]
+## SEU CÓDIGO AQUI #####################################################
+        
+        # Mapeia o eixo X de [-1, 1] para [0, screen_width]
+        triangle[:, 0] = (triangle[:, 0] + 1.0) * (self.screen_width / 2.0)
+        
+        # Mapeia o eixo Y de [-1, 1] para [0, screen_height]
+        triangle[:, 1] = (triangle[:, 1] + 1.0) * (self.screen_height / 2.0)
 
         #########################################################################
 

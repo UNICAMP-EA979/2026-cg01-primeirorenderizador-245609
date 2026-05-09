@@ -78,7 +78,7 @@ class Runtime:
                 # Crie a transformação do nó filho, concatenando com as transformações anteriores
 
                 # Create child transformation
-                child_transformation =
+                child_transformation = child_transformation = transformation @ child.model_transform
 
                 #########################################################################
 

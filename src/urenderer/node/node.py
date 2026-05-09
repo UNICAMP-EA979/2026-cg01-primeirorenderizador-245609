@@ -47,15 +47,44 @@ class Node:
         # Scale matrix
         S = np.eye(4)
 
+        S = np.array([self.scale(0),  0,   0,   0],
+             [0,   self.scale(1), 0,    0],
+             [0,  0,   self.scale(2),   0],
+             [0,  0,   0,               1]);
+
         # Translation matrix
         T = np.eye(4)
+        Tx = np.array([1, 0, 0, np.translation(0)],
+                      [0, 1, 0, np.translation(1)],
+                      [0, 0, 1, np.translation(2)],
+                      [0, 0, 0, 1]);
 
         # Rotation matrix
         # Dica: utilize o método Rotation.from_euler para criar a rotação
         # Observe que os ângulos de rotação estão em graus
         R = np.eye(4)
 
-        final_transformation =
+        Rx = np.eye(4)
+        Ry = np.eye(4)
+        Rz = np.eye(4)
+        a = self.rotation[0]
+        b = self.rotation[1]
+        c = self.rotation[2]
+        Rx = np.array([1,     0,      0,        0,],
+              [0, np.cos(a), -np.sin(a), 0],
+              [0, np.sin(a), np.cos(a), 0],
+              [0, np.sin(a), np.cos(a), 0],
+              [0,     0,       0,       1]);
+        Ry = np.array([np.cos(b), 0, np.sin(b), 0 ],
+              [0,          1,   0,      0],
+              [-np.sin(b), 0, np.cos(b), 0],
+              [0,          0,   0,      1]);
+        Rz = np.array([np.cos(c), -np.sen(c), 0,    0],
+              [np.sen(c),  np.cos(c),  0,   0],
+              [0,         0,         1,     0],
+              [0,         0,           0,   1]);
+
+        final_transformation = T*((Rx*Ry*Rz)*S)
 
         #########################################################################
 
