@@ -1,43 +1,6 @@
 import numpy as np
 import urenderer
 
-def get_ifs_pyramid(base_size: float = 100.0, height: float = 150.0) -> tuple[np.ndarray, list]:
-    """
-    Create a pyramid geometry (square base pyramid)
-    
-    Args:
-        base_size (float): Size of the square base
-        height (float): Height of the pyramid
-    
-    Returns:
-        tuple[np.ndarray, list]: (vertices, faces) where vertices is Nx3 array and faces is list of vertex indices
-    """
-    half_size = base_size / 2
-    
-    # Vertices of the pyramid
-    # Order: bottom square (4 vertices) + top apex (1 vertex)
-    vertices = np.array([
-        [-half_size, -half_size, 0],  # 0: bottom front-left
-        [ half_size, -half_size, 0],  # 1: bottom front-right
-        [ half_size,  half_size, 0],  # 2: bottom back-right
-        [-half_size,  half_size, 0],  # 3: bottom back-left
-        [0, 0, height]                # 4: top apex
-    ])
-    
-    # Faces (triangles and square base)
-    faces = [
-        # Bottom face (square) - can be divided into two triangles
-        [0, 1, 2],  # First half of bottom
-        [0, 2, 3],  # Second half of bottom
-        # Side faces (triangles)
-        [0, 1, 4],  # Front face
-        [1, 2, 4],  # Right face
-        [2, 3, 4],  # Back face
-        [3, 0, 4]   # Left face
-    ]
-    
-    return vertices, faces
-
 # Crie uma cena contendo uma pirâmide e renderize ela
 #
 # Implemente urenderer.geometry.polygonal_ifs.get_ifs_pyramid para obter a geometria de uma pirâmide

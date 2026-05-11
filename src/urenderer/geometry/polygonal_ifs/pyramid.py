@@ -16,7 +16,7 @@ def get_ifs_pyramid() -> dict:
     geometry_vertex = np.array([
         [-0.5, -0.5, 0],
         [0.5, -0.5, 0],
-        [0, 1, 0],
+        [0, 0.5, 0],
         [0, 0, 1]
     ], dtype=np.float64)
 
