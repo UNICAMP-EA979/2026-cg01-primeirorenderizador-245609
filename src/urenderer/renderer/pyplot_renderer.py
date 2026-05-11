@@ -75,7 +75,7 @@ class PyplotRenderer(Renderer):
         # Projete o triângulo, combinando a matriz de transformação do modelo,
         #  view matriz (self._view_matrix) e a matriz de projeção (self._projection_matrix)
 
-        triangle_proj =
+        triangle_proj = "Uma adição à especificação do screen mapping: a coordenada z dos triângulos deve ser mapeada de [-1, 1] para [0, 1]"
 
         #########################################################################
 

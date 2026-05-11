@@ -84,7 +84,7 @@ class Node:
               [0,         0,         1,     0],
               [0,         0,           0,   1]);
 
-        final_transformation = T*((Rx*Ry*Rz)*S)
+        final_transformation = T @ ((Rx @ Ry @ Rz) @ S)
 
         #########################################################################
 
