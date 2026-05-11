@@ -47,15 +47,31 @@ class Node:
         # Scale matrix
         S = np.eye(4)
 
+        S = np.eye(4)
+        S[0, 0] = self.scale[0]  # Corrigido: use colchetes, não parênteses
+        S[1, 1] = self.scale[1]
+        S[2, 2] = self.scale[2]
+
         # Translation matrix
         T = np.eye(4)
+        T[0, 3] = self.translation[0]  # Corrigido: use colchetes
+        T[1, 3] = self.translation[1]
+        T[2, 3] = self.translation[2]
 
         # Rotation matrix
         # Dica: utilize o método Rotation.from_euler para criar a rotação
         # Observe que os ângulos de rotação estão em graus
         R = np.eye(4)
 
-        final_transformation =
+        rotation_rad = np.radians(self.rotation)
+        r = Rotation.from_euler('xyz', rotation_rad)
+        R = r.as_matrix()
+        
+        # Create 4x4 rotation matrix
+        R_4x4 = np.eye(4)
+        R_4x4[:3, :3] = R
+
+        final_transformation = T @ ((R_4x4) @ S)
 
         #########################################################################
 

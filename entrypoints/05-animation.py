@@ -39,6 +39,32 @@ if __name__ == "__main__":
 
     # Crie a cena
 
+    # Pegando a geometria do cubo e garantindo o formato correto (tupla ou dicionário)
+    cube_data = urenderer.geometry.polygonal_ifs.get_ifs_cube()
+    if isinstance(cube_data, tuple):
+        cube_data = {"geometry_vertex": cube_data[0], "geometry_index": cube_data[1]}
+        
+    # Preenchendo os dados do nó
+    node.render_data['vertices'] = cube_data["geometry_vertex"].copy()
+    node.render_data['faces'] = cube_data["geometry_index"]
+    node.render_data['color'] = 'magenta'
+    node.render_data['alpha'] = 0.9
+    node.render_data['geometry_vertex'] = cube_data["geometry_vertex"].copy()
+    node.render_data['geometry_index'] = cube_data["geometry_index"]
+    
+    node.translation = np.array([0.0, 0.0, 0.0])
+    node.scale = np.array([3.0, 3.0, 3.0])  # Escala boa para visualização
+    
+    # Adiciona o objeto animado na cena
+    runtime.scene.add_child(node)
+    
+    # Configura a câmera para enxergar o cubo no centro
+    runtime.camera.translation = np.array([6.0, 4.0, 8.0])
+    runtime.camera.rotation = np.array([-20.0, 35.0, 0.0])
+    runtime.camera.near_plane = 0.1
+    runtime.camera.far_plane = 50.0
+    runtime.camera.vertical_fov = 60.0
+
     runtime.loop(n=10, capture=True)
 
     urenderer.utils.image_to_video("05-animation")
