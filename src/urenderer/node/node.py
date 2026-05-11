@@ -47,44 +47,31 @@ class Node:
         # Scale matrix
         S = np.eye(4)
 
-        S = np.array([self.scale(0),  0,   0,   0],
-             [0,   self.scale(1), 0,    0],
-             [0,  0,   self.scale(2),   0],
-             [0,  0,   0,               1]);
+        S = np.eye(4)
+        S[0, 0] = self.scale[0]  # Corrigido: use colchetes, não parênteses
+        S[1, 1] = self.scale[1]
+        S[2, 2] = self.scale[2]
 
         # Translation matrix
         T = np.eye(4)
-        Tx = np.array([1, 0, 0, np.translation(0)],
-                      [0, 1, 0, np.translation(1)],
-                      [0, 0, 1, np.translation(2)],
-                      [0, 0, 0, 1]);
+        T[0, 3] = self.translation[0]  # Corrigido: use colchetes
+        T[1, 3] = self.translation[1]
+        T[2, 3] = self.translation[2]
 
         # Rotation matrix
         # Dica: utilize o método Rotation.from_euler para criar a rotação
         # Observe que os ângulos de rotação estão em graus
         R = np.eye(4)
 
-        Rx = np.eye(4)
-        Ry = np.eye(4)
-        Rz = np.eye(4)
-        a = self.rotation[0]
-        b = self.rotation[1]
-        c = self.rotation[2]
-        Rx = np.array([1,     0,      0,        0,],
-              [0, np.cos(a), -np.sin(a), 0],
-              [0, np.sin(a), np.cos(a), 0],
-              [0, np.sin(a), np.cos(a), 0],
-              [0,     0,       0,       1]);
-        Ry = np.array([np.cos(b), 0, np.sin(b), 0 ],
-              [0,          1,   0,      0],
-              [-np.sin(b), 0, np.cos(b), 0],
-              [0,          0,   0,      1]);
-        Rz = np.array([np.cos(c), -np.sen(c), 0,    0],
-              [np.sen(c),  np.cos(c),  0,   0],
-              [0,         0,         1,     0],
-              [0,         0,           0,   1]);
+        rotation_rad = np.radians(self.rotation)
+        r = Rotation.from_euler('xyz', rotation_rad)
+        R = r.as_matrix()
+        
+        # Create 4x4 rotation matrix
+        R_4x4 = np.eye(4)
+        R_4x4[:3, :3] = R
 
-        final_transformation = T @ ((Rx @ Ry @ Rz) @ S)
+        final_transformation = T @ ((R_4x4) @ S)
 
         #########################################################################
 

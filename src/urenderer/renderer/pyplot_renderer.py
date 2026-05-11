@@ -2,9 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from urenderer.node import Camera, Node
 from urenderer.utils import get_filename_unique
-
-from .renderer import Renderer
-
+from urenderer.renderer.renderer import Renderer
 
 class PyplotRenderer(Renderer):
     '''
@@ -78,12 +76,7 @@ class PyplotRenderer(Renderer):
         MVP = self._projection_matrix @ self._view_matrix @ model_transformation
         triangle_proj = (MVP @ triangle.T).T
 
-<<<<<<< HEAD
-        triangle_proj = "Uma adição à especificação do screen mapping: a coordenada z dos triângulos deve ser mapeada de [-1, 1] para [0, 1]"
-
-=======
     
->>>>>>> db5a2a669d61e560116e27e6aefacdf9b6e5408d
         #########################################################################
 
         return triangle_proj
