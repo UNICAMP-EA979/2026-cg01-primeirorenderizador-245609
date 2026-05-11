@@ -69,12 +69,13 @@ class PyplotRenderer(Renderer):
         Returns:
             np.ndarray: the projected triangle (3x4)
         '''
+        ## SEU CÓDIGO AQUI #####################################################
         # Calcula a Matriz MVP (Model-View-Projection)
         MVP = self._projection_matrix @ self._view_matrix @ model_transformation
-        
-        # triangle é 3x4, então triangle.T é 4x3
-        # MVP @ (4x3) = 4x3, depois .T fica 3x4
+        # triangle é 3x4, triangle.T é 4x3, resultado fica 3x4
         triangle_proj = (MVP @ triangle.T).T
+        #########################################################################
+
         return triangle_proj
 
     def _stage_clipping(self, triangle: np.ndarray) -> tuple[bool, np.ndarray]:
@@ -91,26 +92,32 @@ class PyplotRenderer(Renderer):
         Returns:
             tuple[bool, np.ndarray]: if the triangle was clipped, and the triangle normalized if it was not.
         '''
+
+        ## SEU CÓDIGO AQUI #####################################################
+        
         # Separa as coordenadas xyz (3x3) e a coluna w (3x1)
         xyz = triangle[:, 0:3]
         w = triangle[:, 3:4]
         
         # Verificar se o triângulo está completamente fora do frustum
-        # Um vértice está fora se x < -w ou x > w ou y < -w ou y > w ou z < -w ou z > w
         outside = np.any(xyz < -w, axis=1) | np.any(xyz > w, axis=1)
         
         if np.all(outside):
-            # Triângulo invisível - todos os vértices estão fora
+            # Triângulo invisível
             return True, triangle
         
         if not np.any(outside):
             # Triângulo completamente dentro - normalizar para NDC
-            # Divide cada coordenada xyz pelo seu respectivo w
-            triangle_ndc = xyz / w
+            # Manter o formato 3x4 (com w=1)
+            triangle_ndc = np.zeros_like(triangle)
+            triangle_ndc[:, 0:3] = xyz / w
+            triangle_ndc[:, 3] = 1.0
             return False, triangle_ndc
         
-        # Triângulo parcialmente visível - descartar (conforme especificação)
+        # Triângulo parcialmente visível - descartar
         return True, triangle
+        
+        #########################################################################
 
     def _stage_screen_mapping(self, triangle: np.ndarray) -> np.ndarray:
         '''
@@ -119,26 +126,28 @@ class PyplotRenderer(Renderer):
         Maps the triangle from the normalized device coordinates [-1, 1]
 
         Args:
-            triangle (np.ndarray): triangle to map (3x3, in NDC)
+            triangle (np.ndarray): triangle to map (3x4)
 
         Returns:
-            np.ndarray: mapped triangle (3x4 with x,y in screen space and w=1)
+            np.ndarray: mapped triangle (3x4)
         '''
-        # Criar uma cópia com formato 3x4 (adicionar w=1)
-        result = np.ones((3, 4))
+        ## SEU CÓDIGO AQUI #####################################################
+        
+        # Criar uma cópia para não modificar o original
+        triangle_mapped = triangle.copy()
         
         # Mapeia o eixo X de [-1, 1] para [0, screen_width]
-        result[:, 0] = (triangle[:, 0] + 1.0) * (self.screen_width / 2.0)
+        triangle_mapped[:, 0] = (triangle[:, 0] + 1.0) * (self.screen_width / 2.0)
         
         # Mapeia o eixo Y de [-1, 1] para [0, screen_height]
-        result[:, 1] = (triangle[:, 1] + 1.0) * (self.screen_height / 2.0)
+        triangle_mapped[:, 1] = (triangle[:, 1] + 1.0) * (self.screen_height / 2.0)
         
-        # Mantém a profundidade Z
-        result[:, 2] = triangle[:, 2]
+        # Nota: A coordenada Z e W permanecem inalteradas
+        # Z continua em NDC, W = 1
         
-        # W = 1 (já definido)
-        
-        return result
+        #########################################################################
+
+        return triangle_mapped
 
     def render_valid_node(self, node: Node, model_transformation: np.ndarray):
         '''
@@ -155,7 +164,7 @@ class PyplotRenderer(Renderer):
 
         # Processes each triangle of the node
         for triangle_index in geometry_index:
-            # Convert to homogeneous coordinates (3x4)
+            # Convert to homogeneous coordinates.
             triangle = geometry_vertex[triangle_index]
             triangle = np.hstack([triangle, np.ones((3, 1))])
 
@@ -168,12 +177,11 @@ class PyplotRenderer(Renderer):
             if clip:
                 continue
 
-            # Screen Mapping (retorna 3x4)
+            # Screen Mapping
             triangle_screen = self._stage_screen_mapping(triangle_ndc)
 
             # Buffer the triangle (apenas coordenadas x,y para desenho)
             self._triangles.append(triangle_screen[:, :2])
-            # Profundidade média para ordenação
             self._depth.append(np.mean(triangle_ndc[:, 2]))
 
     def end(self, capture: bool = False):
