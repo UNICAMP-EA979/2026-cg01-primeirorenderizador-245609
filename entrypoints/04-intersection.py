@@ -18,6 +18,10 @@ if __name__ == "__main__":
     # Crie a cena
     # Criar geometria do cubo
     cube_data = urenderer.geometry.polygonal_ifs.get_ifs_cube()
+
+    if isinstance(cube_data, tuple):
+        cube_data = {"geometry_vertex": cube_data[0], "geometry_index": cube_data[1]}
+
     vertices = cube_data["geometry_vertex"]
     faces = cube_data["geometry_index"]
     
@@ -27,6 +31,9 @@ if __name__ == "__main__":
     cube1.render_data['faces'] = faces
     cube1.render_data['color'] = 'red'
     cube1.render_data['alpha'] = 0.7
+    cube1.render_data['geometry_vertex'] = vertices.copy()
+    cube1.render_data['geometry_index'] = faces
+    
     cube1.translation = np.array([0, 0, 0])
     cube1.scale = np.array([1.0, 1.0, 1.0])
     
@@ -36,6 +43,9 @@ if __name__ == "__main__":
     cube2.render_data['faces'] = faces
     cube2.render_data['color'] = 'blue'
     cube2.render_data['alpha'] = 0.7
+    cube2.render_data['geometry_vertex'] = vertices.copy()
+    cube2.render_data['geometry_index'] = faces
+    
     cube2.translation = np.array([0.6, 0.6, 0.6])  # Deslocado diagonalmente
     cube2.scale = np.array([1.0, 1.0, 1.0])
     
@@ -49,6 +59,9 @@ if __name__ == "__main__":
     cube3.render_data['faces'] = faces
     cube3.render_data['color'] = 'green'
     cube3.render_data['alpha'] = 0.7
+    cube3.render_data['geometry_vertex'] = vertices.copy()
+    cube3.render_data['geometry_index'] = faces
+    
     cube3.translation = np.array([-0.6, -0.4, 0.5])
     cube3.scale = np.array([0.8, 0.8, 0.8])
     

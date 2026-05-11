@@ -1,9 +1,25 @@
 import numpy as np
 import urenderer
 
-# Crie uma cena contendo uma pirâmide e renderize ela
-#
-# Implemente urenderer.geometry.polygonal_ifs.get_ifs_pyramid para obter a geometria de uma pirâmide
+def get_ifs_pyramid():
+    vertices = np.array([
+        [ 0.0,  1.0,  0.0],  # 0: Topo da Pirâmide
+        [-1.0, -1.0,  1.0],  # 1: Base Frente-Esquerda
+        [ 1.0, -1.0,  1.0],  # 2: Base Frente-Direita
+        [ 1.0, -1.0, -1.0],  # 3: Base Trás-Direita
+        [-1.0, -1.0, -1.0]   # 4: Base Trás-Esquerda
+    ])
+    
+    # Índices dos triângulos conectando os vértices
+    faces = [
+        [0, 1, 2],  # Parede da Frente
+        [0, 2, 3],  # Parede da Direita
+        [0, 3, 4],  # Parede de Trás
+        [0, 4, 1],  # Parede da Esquerda
+        [1, 3, 2],  # Metade do Chão
+        [1, 4, 3]   # Outra Metade do Chão
+    ]
+    return vertices, faces
 
 if __name__ == "__main__":
     urenderer.utils.clear_workdir("02-pyramid")
@@ -13,19 +29,23 @@ if __name__ == "__main__":
     # Crie a pirâmide
     pyramid_node = urenderer.node.Node("pyramid")
     
-    # Obter a geometria da pirâmide
-    vertices, faces = urenderer.geometry.polygonal_ifs.get_ifs_pyramid()
-    
-    # Adicionar dados de renderização
+
+    vertices, faces = get_ifs_pyramid()
+
     pyramid_node.render_data['vertices'] = vertices
     pyramid_node.render_data['faces'] = faces
     pyramid_node.render_data['color'] = 'orange'
     pyramid_node.render_data['alpha'] = 0.8
     
+    pyramid_node.render_data['geometry_vertex'] = vertices
+    pyramid_node.render_data['geometry_index'] = faces
+    
     # Posicionar a pirâmide na cena
     pyramid_node.translation = np.array([0, 0, 0])
     pyramid_node.rotation = np.array([0, 0, 0])  # Sem rotação inicial
-    pyramid_node.scale = np.array([1, 1, 1])
+    
+    #Aumento da escala de [1,1,1] para [100,100,100] 
+    pyramid_node.scale = np.array([100, 100, 100])
     
     # Adicionar a pirâmide à cena
     runtime.scene.add_child(pyramid_node)
@@ -47,9 +67,9 @@ if __name__ == "__main__":
         grid_points.append([-grid_size, i, -0.01])
         grid_points.append([grid_size, i, -0.01])
     
-    axes_vertices = np.array([[0, 0, 0], [200, 0, 0],  # X axis
-        [0, 0, 0], [0, 200, 0],  # Y axis
-        [0, 0, 0], [0, 0, 200]   # Z axis
+    axes_vertices = np.array([[0, 0, 0], [200, 0, 0],  
+        [0, 0, 0], [0, 200, 0],  
+        [0, 0, 0], [0, 0, 200]   
     ])
     axes_faces = [[0, 1], [2, 3], [4, 5]]  # Linhas
     axes_node = urenderer.node.Node("axes")
@@ -58,8 +78,9 @@ if __name__ == "__main__":
     axes_node.render_data['color'] = 'white'
     ground_node.render_data['alpha'] = 0.3
     runtime.scene.add_child(axes_node)
-    print(f"Vértices da pirâmide: {vertices}")
-    print(f"Faces: {faces}")
+    
+    print(f"Vértices da pirâmide: \n{vertices}")
+    print(f"Faces: \n{faces}")
     
     runtime.iter(capture=True)
     print("Renderização concluída")
