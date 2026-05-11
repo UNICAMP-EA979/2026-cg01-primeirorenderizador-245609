@@ -73,10 +73,14 @@ class PyplotRenderer(Renderer):
         # Projete o triângulo, combinando a matriz de transformação do modelo,
         #  view matriz (self._view_matrix) e a matriz de projeção (self._projection_matrix)
         # Calcula a Matriz MVP (Model-View-Projection)
+        
+        # Método 1: Multiplicar as matrizes na ordem correta (Projeção * View * Model)
         MVP = self._projection_matrix @ self._view_matrix @ model_transformation
+        
+        # Aplicar a transformação ao triângulo (cada vértice é uma linha)
+        # triangle é 3x4 (3 vértices, cada um com coordenadas homogêneas x,y,z,w)
         triangle_proj = (MVP @ triangle.T).T
-
-    
+        
         #########################################################################
 
         return triangle_proj
@@ -96,22 +100,33 @@ class PyplotRenderer(Renderer):
             tuple[bool, np.ndarray]: if the triangle was clipped, and the triangle normalized if it was not.
         '''
 
-    ## SEU CÓDIGO AQUI #####################################################
+        ## SEU CÓDIGO AQUI #####################################################
         
         # Separa as coordenadas xyz (3x3) e a coluna w (3x1) para facilitar
         xyz = triangle[:, 0:3]
-        w = triangle[:, 3:4] # Mantém o formato de coluna
+        w = triangle[:, 3:4]  # Mantém o formato de coluna
         
         # Checa se algum x, y ou z é menor que -w ou maior que w
-        clip = np.any(xyz < -w) or np.any(xyz > w)
-
-        if not clip:
-            # Normalize o triângulo, dividindo cada coordenada pelo seu respectivo v_w
-            # Isso transforma as coordenadas para NDC (Normalized Device Coordinates)
+        # Um triângulo está fora do frustum se todos os vértices estão fora
+        # Ou se algum vértice tem coordenada fora do range [-w, w]
+        
+        # Verificar se o triângulo está completamente fora do frustum
+        # Um vértice está fora se qualquer coordenada x,y,z estiver fora de [-w, w]
+        outside = np.any(xyz < -w, axis=1) | np.any(xyz > w, axis=1)
+        
+        if np.all(outside):
+            # Todos os vértices estão fora - triângulo invisível
+            return True, triangle
+        
+        if not np.any(outside):
+            # Todos os vértices estão dentro - normalizar e retornar
             triangle_ndc = triangle / w
-            return clip, triangle_ndc
-
-        return clip, triangle
+            return False, triangle_ndc
+        
+        # Triângulo parcialmente visível - para este exercício, descartamos
+        # (conforme especificado no comentário)
+        return True, triangle
+        
         #########################################################################
 
     def _stage_screen_mapping(self, triangle: np.ndarray) -> np.ndarray:
@@ -121,22 +136,30 @@ class PyplotRenderer(Renderer):
         Maps the triangle from the normalized device coordinates [-1, 1]
 
         Args:
-            triangle (np.ndarray): triangle to map
+            triangle (np.ndarray): triangle to map (3x4, already in NDC)
 
         Returns:
-            np.ndarray: mapped triangle
+            np.ndarray: mapped triangle (3x4, with x,y in screen space)
         '''
-## SEU CÓDIGO AQUI #####################################################
+        ## SEU CÓDIGO AQUI #####################################################
+        
+        # Criar uma cópia para não modificar o original
+        triangle_mapped = triangle.copy()
         
         # Mapeia o eixo X de [-1, 1] para [0, screen_width]
-        triangle[:, 0] = (triangle[:, 0] + 1.0) * (self.screen_width / 2.0)
+        triangle_mapped[:, 0] = (triangle[:, 0] + 1.0) * (self.screen_width / 2.0)
         
         # Mapeia o eixo Y de [-1, 1] para [0, screen_height]
-        triangle[:, 1] = (triangle[:, 1] + 1.0) * (self.screen_height / 2.0)
+        # Nota: Y é invertido porque na tela o Y cresce para baixo
+        triangle_mapped[:, 1] = (triangle[:, 1] + 1.0) * (self.screen_height / 2.0)
+        
+        # Manter Z e W inalterados
+        triangle_mapped[:, 2] = triangle[:, 2]
+        triangle_mapped[:, 3] = triangle[:, 3]
 
         #########################################################################
 
-        return triangle
+        return triangle_mapped
 
     def render_valid_node(self, node: Node, model_transformation: np.ndarray):
         '''
