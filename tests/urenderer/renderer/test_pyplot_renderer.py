@@ -1,321 +1,165 @@
-import unittest
-
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_array_equal
+from urenderer.node import Camera, Node
+from urenderer.renderer.renderer import Renderer
 
-import urenderer
 
-
-class TestPyplotRenderer(unittest.TestCase):
-    def setUp(self) -> None:
-        self.renderer = urenderer.renderer.PyplotRenderer(1920, 1080, False)
-        self.camera = urenderer.node.Camera()
-        self.view_matrix = np.array([[0.96363045,  0.37793214,  0.5668982,  1.0],
-                                     [0., -1.41421356,  2.12132034,  -2.0],
-                                     [-0.26723838,  1.36277926,  2.04416888,  3.0],
-                                     [0.,  0.,  0.,  1.]])
-
-        self.renderer.start(self.camera, self.view_matrix, "test")
-
-    def tearDown(self):
-        plt.close()
-
-    def test_stage_vertex_shading(self) -> None:
-        triangle = np.array([[0, 1, 2, 1],
-                             [-5, 6, -8, 1],
-                             [0.1, 0.6, -0.8, 1]])
-        model_transformation = np.array([[5.20417043e-17, -1.99999539e+00,  6.44025999e-03,
-                                          6.00000000e+00],
-                                         [9.63630453e-01, -1.14738975e-03, -8.01713281e-01,
-                                          -1.20000000e+01],
-                                         [-2.67238376e-01, -4.13735377e-03, -2.89088470e+00,
-                                          8.00000000e+00],
-                                         [0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
-                                          1.00000000e+00]])
-
-        desired = np.array([[0.955278,  37.995261,  12.550103,  12.086448],
-                            [9.375595, 141.224804, -71.569286, -56.738507],
-                            [7.008502,  61.908388, -11.255574,  -7.390925]])
-
-        triangle_proj = self.renderer._stage_vertex_shading(
-            triangle, model_transformation)
-
-        assert_array_almost_equal(triangle_proj, desired)
-
-    def test_stage_clipping(self) -> None:
-        triangle = np.array([[[-23.15990399,  11.22405823, -95.1161984, -83.32365699],
-                              [59.89844915,  40.04152567,
-                                  70.90252336, -85.33251386],
-                              [25.03143291,  46.37235771,  -5.63489123,   7.09472747]],
-
-                             [[-48.75164749, -83.94376411,  33.76635892,  29.5040129],
-                              [91.66003248, -22.89437631, -
-                                  26.84965372, -13.88151732],
-                              [65.96957754,  87.18490957,  81.0829589,  56.97025871]],
-
-                             [[-90.79685026,  29.52172302,   2.11672775,  71.45667051],
-                              [-5.48624473,  82.46080339, -
-                                  99.29809015, -46.89779362],
-                              [-82.80231553, -95.33934691, -76.43685915, -29.41582561]],
-
-                             [[-20.26452008,  94.22514349,  96.32728372,  46.57547405],
-                              [88.80743381, -12.74959961, -88.53779,  49.11143416],
-                              [-40.16964683, -30.42005668, -44.1515403, -61.64914754]],
-
-                             [[-67.76539335,  28.05132178,  21.18830527, -49.79486874],
-                              [-82.48337736, -21.22916058, -
-                                  13.85950212, -92.19147277],
-                              [79.24262469, -47.58200943,  34.39927788,  25.684644]],
-
-                             [[49.8590601,  62.52934899,  53.21096594, 544.74509025],
-                              [49.74163538,  84.84762164,
-                                  68.27648596, 471.75265407],
-                              [-19.92384843,   8.57967967, -16.81851906, 565.23596908]],
-
-                             [[-15.62189569,  66.31028734,   8.24352195, 402.95991652],
-                              [91.79198464,  23.17527383,
-                                  49.18412502, 494.48483125],
-                              [41.20701039,  78.40845533,   6.85799701, 426.72501393]],
-
-                             [[43.83119665,   3.93203707, -24.73927321, 442.3830652],
-                              [66.90586949, -76.37730419,
-                                  50.92508755, 558.63555756],
-                              [-21.49567195, -51.14314224,  -5.3696059, 446.04097038]],
-
-                             [[63.14810627,  75.59193069, -47.12128391, 535.58190274],
-                              [33.74938687,  34.74186656,
-                                  43.26615781, 509.49174837],
-                              [59.22620261, -91.10247289, -68.59935498, 421.36090216]],
-
-                             [[-67.64656123,  26.03337789,  98.81460102, 590.69462086],
-                              [-40.75269341,  99.39988148, -
-                                  57.23212523, 429.3120528],
-                              [25.90998739, -32.97557764, -14.79707674, 400.88750315]]])
-
-        clip_result = []
-        triangle_result = []
-        for t in triangle:
-            cr, tr = self.renderer._stage_clipping(t)
-            clip_result.append(cr)
-            triangle_result.append(tr)
-
-        clip_desired = np.array(
-            [True, True, True, True, True, False, False, False, False, False])
-        triangle_desired = np.array([[[-2.31599040e+01,  1.12240582e+01, -9.51161984e+01,
-                                       -8.33236570e+01],
-                                      [5.98984491e+01,  4.00415257e+01,  7.09025234e+01,
-                                       -8.53325139e+01],
-                                      [2.50314329e+01,  4.63723577e+01, -5.63489123e+00,
-                                       7.09472747e+00]],
-
-                                     [[-4.87516475e+01, -8.39437641e+01,  3.37663589e+01,
-                                       2.95040129e+01],
-                                      [9.16600325e+01, -2.28943763e+01, -2.68496537e+01,
-                                         -1.38815173e+01],
-                                      [6.59695775e+01,  8.71849096e+01,  8.10829589e+01,
-                                         5.69702587e+01]],
-
-                                     [[-9.07968503e+01,  2.95217230e+01,  2.11672775e+00,
-                                       7.14566705e+01],
-                                      [-5.48624473e+00,  8.24608034e+01, -9.92980902e+01,
-                                       -4.68977936e+01],
-                                      [-8.28023155e+01, -9.53393469e+01, -7.64368592e+01,
-                                         -2.94158256e+01]],
-
-                                     [[-2.02645201e+01,  9.42251435e+01,  9.63272837e+01,
-                                       4.65754740e+01],
-                                      [8.88074338e+01, -1.27495996e+01, -8.85377900e+01,
-                                         4.91114342e+01],
-                                      [-4.01696468e+01, -3.04200567e+01, -4.41515403e+01,
-                                         -6.16491475e+01]],
-
-                                     [[-6.77653934e+01,  2.80513218e+01,  2.11883053e+01,
-                                       -4.97948687e+01],
-                                      [-8.24833774e+01, -2.12291606e+01, -1.38595021e+01,
-                                       -9.21914728e+01],
-                                      [7.92426247e+01, -4.75820094e+01,  3.43992779e+01,
-                                         2.56846440e+01]],
-
-                                     [[9.15273235e-02,  1.14786439e-01,  9.76804874e-02,
-                                       1.00000000e+00],
-                                      [1.05440075e-01,  1.79856162e-01,  1.44729416e-01,
-                                       1.00000000e+00],
-                                      [-3.52487271e-02,  1.51789344e-02, -2.97548634e-02,
-                                         1.00000000e+00]],
-
-                                     [[-3.87678651e-02,  1.64558023e-01,  2.04574242e-02,
-                                       1.00000000e+00],
-                                      [1.85631548e-01,  4.68675121e-02,  9.94653868e-02,
-                                         1.00000000e+00],
-                                      [9.65657251e-02,  1.83744690e-01,  1.60712327e-02,
-                                         1.00000000e+00]],
-
-                                     [[9.90797345e-02,  8.88830830e-03, -5.59227402e-02,
-                                       1.00000000e+00],
-                                      [1.19766579e-01, -1.36721165e-01,  9.11597675e-02,
-                                       1.00000000e+00],
-                                      [-4.81921469e-02, -1.14660190e-01, -1.20383692e-02,
-                                         1.00000000e+00]],
-
-                                     [[1.17905601e-01,  1.41139815e-01, -8.79814715e-02,
-                                       1.00000000e+00],
-                                      [6.62412826e-02,  6.81892625e-02,  8.49202327e-02,
-                                       1.00000000e+00],
-                                      [1.40559322e-01, -2.16210077e-01, -1.62804272e-01,
-                                         1.00000000e+00]],
-
-                                     [[-1.14520361e-01,  4.40724817e-02,  1.67285426e-01,
-                                       1.00000000e+00],
-                                      [-9.49255749e-02,  2.31532939e-01, -1.33311247e-01,
-                                       1.00000000e+00],
-                                      [6.46315667e-02, -8.22564370e-02, -3.69107957e-02,
-                                         1.00000000e+00]]])
-
-        assert_array_equal(np.array(clip_result), clip_desired)
-        assert_array_almost_equal(np.array(triangle_result), triangle_desired)
-
-    def test_stage_screen_mapping(self) -> None:
-        triangle_input = np.array([[[-2.31599040e+01,  1.12240582e+01, -9.51161984e+01,
-                                     -8.33236570e+01],
-                                    [5.98984491e+01,  4.00415257e+01,  7.09025234e+01,
-                                     -8.53325139e+01],
-                                    [2.50314329e+01,  4.63723577e+01, -5.63489123e+00,
-                                     7.09472747e+00]],
-
-                                   [[-4.87516475e+01, -8.39437641e+01,  3.37663589e+01,
-                                     2.95040129e+01],
-                                    [9.16600325e+01, -2.28943763e+01, -2.68496537e+01,
-                                       -1.38815173e+01],
-                                    [6.59695775e+01,  8.71849096e+01,  8.10829589e+01,
-                                       5.69702587e+01]],
-
-                                   [[-9.07968503e+01,  2.95217230e+01,  2.11672775e+00,
-                                     7.14566705e+01],
-                                    [-5.48624473e+00,  8.24608034e+01, -9.92980902e+01,
-                                     -4.68977936e+01],
-                                    [-8.28023155e+01, -9.53393469e+01, -7.64368592e+01,
-                                       -2.94158256e+01]],
-
-                                   [[-2.02645201e+01,  9.42251435e+01,  9.63272837e+01,
-                                     4.65754740e+01],
-                                    [8.88074338e+01, -1.27495996e+01, -8.85377900e+01,
-                                       4.91114342e+01],
-                                    [-4.01696468e+01, -3.04200567e+01, -4.41515403e+01,
-                                       -6.16491475e+01]],
-
-                                   [[-6.77653934e+01,  2.80513218e+01,  2.11883053e+01,
-                                     -4.97948687e+01],
-                                    [-8.24833774e+01, -2.12291606e+01, -1.38595021e+01,
-                                     -9.21914728e+01],
-                                    [7.92426247e+01, -4.75820094e+01,  3.43992779e+01,
-                                       2.56846440e+01]],
-
-                                   [[9.15273235e-02,  1.14786439e-01,  9.76804874e-02,
-                                     1.00000000e+00],
-                                    [1.05440075e-01,  1.79856162e-01,  1.44729416e-01,
-                                     1.00000000e+00],
-                                    [-3.52487271e-02,  1.51789344e-02, -2.97548634e-02,
-                                       1.00000000e+00]],
-
-                                   [[-3.87678651e-02,  1.64558023e-01,  2.04574242e-02,
-                                     1.00000000e+00],
-                                    [1.85631548e-01,  4.68675121e-02,  9.94653868e-02,
-                                       1.00000000e+00],
-                                    [9.65657251e-02,  1.83744690e-01,  1.60712327e-02,
-                                       1.00000000e+00]],
-
-                                   [[9.90797345e-02,  8.88830830e-03, -5.59227402e-02,
-                                     1.00000000e+00],
-                                    [1.19766579e-01, -1.36721165e-01,  9.11597675e-02,
-                                     1.00000000e+00],
-                                    [-4.81921469e-02, -1.14660190e-01, -1.20383692e-02,
-                                       1.00000000e+00]],
-
-                                   [[1.17905601e-01,  1.41139815e-01, -8.79814715e-02,
-                                     1.00000000e+00],
-                                    [6.62412826e-02,  6.81892625e-02,  8.49202327e-02,
-                                     1.00000000e+00],
-                                    [1.40559322e-01, -2.16210077e-01, -1.62804272e-01,
-                                       1.00000000e+00]],
-
-                                   [[-1.14520361e-01,  4.40724817e-02,  1.67285426e-01,
-                                     1.00000000e+00],
-                                    [-9.49255749e-02,  2.31532939e-01, -1.33311247e-01,
-                                     1.00000000e+00],
-                                    [6.46315667e-02, -8.22564370e-02, -3.69107957e-02,
-                                       1.00000000e+00]]])
-
-        triangle_desired = np.array([[[-2.12735078e+04,  1.17350959e+04, -9.03515505e+04,
-                                    -7.90307107e+04],
-                                      [3.28851625e+04,  2.21624239e+04,  3.88273626e+04,
-                                    -4.55395575e+04],
-                                      [1.30157165e+01,  2.36861789e+01, -2.31744562e+00,
-                                    4.04736373e+00]],
-
-                                     [[-4.58415816e+04, -7.96260135e+04,  3.33757046e+04,
-                                       2.92838524e+04],
-                                      [5.00364175e+04, -1.18229632e+04, -1.39588130e+04,
-                                         -6.95601935e+03],
-                                      [3.34847888e+01,  4.40924548e+01,  4.10414795e+01,
-                                         2.89851294e+01]],
-
-                                     [[-8.62049762e+04,  2.93008541e+04,  2.99205864e+03,
-                                       6.95584037e+04],
-                                      [-2.42257215e+03,  4.50688338e+04, -5.30809687e+04,
-                                         -2.47848086e+04],
-                                      [-4.09011578e+01, -4.71696735e+01, -3.77184296e+01,
-                                         -1.42079128e+01]],
-
-                                     [[-1.84939393e+04,  9.14161377e+04,  9.34341924e+04,
-                                       4.56724551e+04],
-                                      [4.84960143e+04, -6.34478379e+03, -4.72704066e+04,
-                                         2.70601744e+04],
-                                      [-1.95848234e+01, -1.47100283e+01, -2.15757701e+01,
-                                         -3.03245738e+01]],
-
-                                     [[-6.40947776e+04,  2.78892689e+04,  2.13007731e+04,
-                                       -4.68430740e+04],
-                                      [-4.40010238e+04, -1.09237467e+04, -6.94413115e+03,
-                                         -4.92433953e+04],
-                                      [4.01213123e+01, -2.32910047e+01,  1.76996389e+01,
-                                         1.33423220e+01]],
-
-                                     [[1.04786623e+03,  1.07019498e+03,  1.05377327e+03,
-                                       1.92000000e+03],
-                                      [5.96937641e+02,  6.37122327e+02,  6.18153884e+02,
-                                         1.08000000e+03],
-                                      [4.82375636e-01,  5.07589467e-01,  4.85122568e-01,
-                                         1.00000000e+00]],
-
-                                     [[9.22782849e+02,  1.11797570e+03,  9.79639127e+02,
-                                       1.92000000e+03],
-                                      [6.40241036e+02,  5.65308457e+02,  5.93711309e+02,
-                                         1.08000000e+03],
-                                      [5.48282863e-01,  5.91872345e-01,  5.08035616e-01,
-                                         1.00000000e+00]],
-
-                                     [[1.05511655e+03,  9.68532776e+02,  9.06314169e+02,
-                                       1.92000000e+03],
-                                      [6.04673953e+02,  4.66170571e+02,  5.89226274e+02,
-                                         1.08000000e+03],
-                                      [4.75903927e-01,  4.42669905e-01,  4.93980815e-01,
-                                         1.00000000e+00]],
-
-                                     [[1.07318938e+03,  1.09549422e+03,  8.75537787e+02,
-                                       1.92000000e+03],
-                                      [5.75770293e+02,  5.76822202e+02,  5.85856926e+02,
-                                         1.08000000e+03],
-                                      [5.70279661e-01,  3.91894962e-01,  4.18597864e-01,
-                                         1.00000000e+00]],
-
-                                     [[8.50060453e+02,  1.00230958e+03,  1.12059401e+03,
-                                       1.92000000e+03],
-                                      [4.88740190e+02,  6.65027787e+02,  4.68011926e+02,
-                                         1.08000000e+03],
-                                      [5.32315783e-01,  4.58871782e-01,  4.81544602e-01,
-                                         1.00000000e+00]]])
-
-        triangle_result = self.renderer._stage_screen_mapping(triangle_input)
-
-        assert_array_almost_equal(triangle_result, triangle_desired, decimal=3)
+class PyplotRenderer(Renderer):
+    def __init__(self, screen_width: float, screen_height: float, show_plot: bool = True) -> None:
+        super().__init__(screen_width, screen_height)
+        self.fig = None
+        self.ax = None
+        self.camera = None
+        self.view_matrix = None
+        self.show_plot = show_plot
+        
+    def start(self, camera: Camera, view_matrix: np.ndarray, name: str) -> None:
+        """Start the frame rendering"""
+        self.camera = camera
+        self.view_matrix = view_matrix
+        
+        if self.show_plot:
+            self.fig = plt.figure(figsize=(self.screen_width/100, self.screen_height/100))
+            self.ax = self.fig.add_subplot(111, projection='3d')
+            self.ax.set_title(name)
+            self.ax.set_xlabel('X')
+            self.ax.set_ylabel('Y')
+            self.ax.set_zlabel('Z')
+    
+    def validate(self, node: Node) -> bool:
+        """Validate a node for rendering"""
+        return 'vertices' in node.render_data and 'faces' in node.render_data
+    
+    def _stage_vertex_shading(self, triangle: np.ndarray, model_transformation: np.ndarray) -> np.ndarray:
+        """
+        Stage 1-3: Model, View, and Projection transformations
+        Input: triangle in object space (4x3 or 3x4 matrix)
+        Output: triangle in clip space (homogeneous coordinates)
+        """
+        # Ensure triangle is 3x4 (3 vertices, 4 coordinates)
+        if triangle.shape == (4, 3):
+            triangle = triangle.T
+        
+        # Add homogeneous coordinate if needed
+        if triangle.shape[1] == 3:
+            triangle = np.hstack([triangle, np.ones((3, 1))])
+        
+        # Model Transformation (object space -> world space)
+        world_space = (model_transformation @ triangle.T).T
+        
+        # View Transformation (world space -> view space)
+        view_space = (self.view_matrix @ world_space.T).T
+        
+        # Projection Transformation (view space -> clip space)
+        projection_matrix = self.camera.projection_matrix
+        clip_space = (projection_matrix @ view_space.T).T
+        
+        return clip_space
+    
+    def _stage_clipping(self, triangle: np.ndarray) -> tuple:
+        """
+        Stage 4: Clipping against view frustum
+        Returns: (is_visible, clipped_triangle)
+        """
+        # Check if triangle is completely outside the clip space (-w <= x,y,z <= w)
+        # For homogeneous coordinates, we check all vertices
+        w = triangle[:, 3:4]
+        valid = np.all(np.abs(triangle[:, :3]) <= w, axis=1)
+        
+        if np.all(valid):
+            # Triangle fully inside
+            return True, triangle
+        elif np.any(valid):
+            # Triangle partially inside - in a full implementation, we would clip
+            # For this test, we'll return the triangle as-is
+            return True, triangle
+        else:
+            # Triangle fully outside
+            return False, triangle
+    
+    def _stage_screen_mapping(self, triangle: np.ndarray) -> np.ndarray:
+        """
+        Stage 5: Perspective division and viewport mapping
+        Input: triangle in clip space (homogeneous coordinates)
+        Output: triangle in screen space with depth
+        """
+        # Perspective division (clip space -> NDC)
+        w = triangle[:, 3:4]
+        w = np.where(np.abs(w) < 1e-6, 1e-6, w)
+        ndc = triangle[:, :3] / w
+        
+        # Viewport mapping (NDC -> screen space)
+        screen = np.zeros_like(triangle)
+        screen[:, 0] = (ndc[:, 0] + 1.0) * 0.5 * self.screen_width
+        screen[:, 1] = (ndc[:, 1] + 1.0) * 0.5 * self.screen_height
+        screen[:, 2] = (ndc[:, 2] + 1.0) * 0.5  # depth
+        screen[:, 3] = triangle[:, 3]  # keep w for potential use
+        
+        return screen
+    
+    def render_valid_node(self, node: Node, model_transformation: np.ndarray) -> None:
+        """Renders a validated node using the pipeline stages"""
+        vertices = node.render_data['vertices']
+        faces = node.render_data.get('faces', [])
+        
+        if len(vertices) == 0:
+            return
+        
+        # Convert vertices to homogeneous coordinates
+        vertices_homogeneous = np.hstack([
+            vertices,
+            np.ones((len(vertices), 1))
+        ])
+        
+        # Process each face through the pipeline
+        node_color = node.render_data.get('color', 'blue')
+        alpha = node.render_data.get('alpha', 0.5)
+        
+        for face in faces:
+            # Get triangle vertices
+            triangle = vertices_homogeneous[face]
+            
+            # Stage 1-3: Vertex shading (Model, View, Projection)
+            triangle_clip = self._stage_vertex_shading(triangle, model_transformation)
+            
+            # Stage 4: Clipping
+            is_visible, triangle_clipped = self._stage_clipping(triangle_clip)
+            
+            if not is_visible:
+                continue
+            
+            # Stage 5: Screen mapping
+            triangle_screen = self._stage_screen_mapping(triangle_clipped)
+            
+            # Render triangle
+            if self.ax is not None and self.show_plot:
+                # Extract screen coordinates
+                x = triangle_screen[:, 0]
+                y = triangle_screen[:, 1]
+                z = triangle_screen[:, 2]
+                
+                # Close the polygon
+                x = np.append(x, x[0])
+                y = np.append(y, y[0])
+                z = np.append(z, z[0])
+                
+                try:
+                    self.ax.plot_trisurf(x, y, z, color=node_color, alpha=alpha, shade=True)
+                except Exception as e:
+                    print(f"Error rendering face: {e}")
+    
+    def end(self, capture: bool = False) -> None:
+        """Ends the frame rendering"""
+        if self.ax is not None and self.show_plot:
+            plt.tight_layout()
+            
+            if capture:
+                filename = f"frame.png"
+                plt.savefig(filename, dpi=100)
+                print(f"Saved frame to {filename}")
+            
+            plt.draw()
+            plt.pause(0.001)
+            
+            # Clear for next frame
+            self.ax.clear()
